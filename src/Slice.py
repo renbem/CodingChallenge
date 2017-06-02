@@ -11,6 +11,7 @@ from abc import ABCMeta, abstractmethod
 
 import src.parsing as parsing
 import src.utilities as utils
+import src.Exceptions as Exceptions
 import pylab
 
 
@@ -21,19 +22,18 @@ class Slice(object):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, slice_id, filename_absolute):
+    def __init__(self, slice_id, filename):
         """!
         Store the slice_id and absolute filename provided in the parameters
-
-        \param      slice_id           integer value referring to the image
-                                       number
-        \param      filename_absolute  absolute path to filename
+        
+        \param      slice_id  integer value referring to the image number
+        \param      filename  absolute path to filename
         """
         self._slice_id = slice_id
-        self._filename_absolute = filename_absolute
+        self._filename = filename
 
-        if not utils.file_exists(self._filename_absolute):
-            raise NameError("File does not exist")
+        if not utils.file_exists(self._filename):
+            raise Exceptions.FileNotExistent(self._filename)
 
     @abstractmethod
     def get_data(self):
@@ -51,6 +51,12 @@ class Slice(object):
         \return     integer value of image number.
         """
         return self._slice_id
+
+    def get_filename(self):
+        """!
+        \return     filename string
+        """
+        return self._filename
 
     def show(self):
         """!

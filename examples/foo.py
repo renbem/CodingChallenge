@@ -30,7 +30,7 @@ import src.DataReader as DataReader
 
 def get_parsed_input_line(
     verbose,
-    subdirectory_contourfiles,
+    subdirectory_contours,
     subdirectory_dicoms,
     contours_type,
     ):
@@ -43,7 +43,7 @@ def get_parsed_input_line(
 
     parser.add_argument('--dir-input', type=str, help="", required=True)
     parser.add_argument('--subdirectory-dicoms', type=str, help="Subdirectory within dir-input pointing to DICOM images [default: %s]" %(subdirectory_dicoms), required=False, default=subdirectory_dicoms)
-    parser.add_argument('--subdirectory-contourfiles', type=str, help="Subdirectory within dir-input pointing to contour files [default: %s]" %(subdirectory_contourfiles), required=False, default=subdirectory_contourfiles)
+    parser.add_argument('--subdirectory-contours', type=str, help="Subdirectory within dir-input pointing to contour files [default: %s]" %(subdirectory_contours), required=False, default=subdirectory_contours)
     parser.add_argument('--contours-type', type=str, help="Chosen type of contour files [default: %s]" %(contours_type), required=False, default=contours_type)
     parser.add_argument('--csv-file', type=str, help="CSV-file with two columns 'patient-id' and 'original-id' to link up the appropriate DICOM and contour files", required=True)
     parser.add_argument('--verbose', type=bool, help="Turn on/off verbose output. [default: %s]" %(verbose), default=verbose)
@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
     args = get_parsed_input_line(
         verbose=True,
-        subdirectory_contourfiles="contourfiles",
+        subdirectory_contours="contourfiles",
         subdirectory_dicoms="dicoms",
         contours_type="i-contours",
         )
@@ -84,15 +84,14 @@ if __name__ == '__main__':
 
     # Read Samples
     directory_dicoms = os.path.join(args.dir_input, args.subdirectory_dicoms)
-    directory_contourfiles = os.path.join(args.dir_input, args.subdirectory_contourfiles)
+    directory_contourfiles = os.path.join(args.dir_input, args.subdirectory_contours)
     
     data_reader = DataReader.DataReader(directory_dicoms=directory_dicoms, directory_contours=directory_contourfiles, csv_file=args.csv_file, contours_type=args.contours_type)
     data_reader.read_data()
-    training_samples = data_reader.get_training_samples()
+    samples = data_reader.get_samples()
 
-    sample = training_samples[0]
-    for i in range(0, len(training_samples)):
-        training_samples[i].show(1)
+    for i in range(0, len(samples)):
+        samples[i].show(1)
 
         
 

@@ -14,20 +14,22 @@ class Target(Slice):
     Class to define a target (mask) for a training sample
     """
 
-    def __init__(self, slice_id, filename_absolute, shape):
+    def __init__(self, slice_id, filename, shape):
         """!
         Class to define a target (mask) for a training sample
         """
 
-        Slice.__init__(self, slice_id=slice_id,
-                       filename_absolute=filename_absolute)
+        Slice.__init__(self, slice_id=slice_id, filename=filename)
         self._shape = shape
 
     def get_data(self):
         """!
         Gets the target image data.
 
+        \details    Read data array whenever required to keep memory usage low
+
         \return     numpy boolean array of target (mask) data.
         """
-        coordinates = parsing.parse_contour_file(self._filename_absolute)
+        
+        coordinates = parsing.parse_contour_file(self._filename)
         return parsing.poly_to_mask(coordinates, *self._shape)
