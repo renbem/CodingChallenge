@@ -24,7 +24,13 @@ A documentation for the Python source-files can be generated in case [Doxygen](h
 * `open html/index.html`
 
 ## Example usage
-Two example scripts are provided in the folder `examples` which shall illustrate the use of the code.
+Two example scripts are provided in the folder `examples` which shall illustrate the use of the code.  Simply run
+* `python examples/showSamples.py`
+* `python examples/showcaseTrainingPipeline.py`
+
+within the root directory. To check the provided unit tests, execute
+* `python test/runTests.py`
+
 
 ## License
 This code was developed for a particular purpose. However, in case you find it

@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
 ##
-# \file showCaseTrainingPipeline.py
+# \file showcaseTrainingPipeline.py
 # \brief      Showcase how to use training pipeline.
 #
-# \details    By executing 'python examples/showCaseTrainingPipeline.py'
+# \details    By executing 'python examples/showcaseTrainingPipeline.py'
 #             provided test data is read and visualized sequentially. This code
 #             can be run by specifying the respective arguments. More
-#             information via 'python examples/showCaseTrainingPipeline.py -h'.
+#             information via 'python examples/showcaseTrainingPipeline.py -h'.
 #
 # \pre        Requires the installation of ITK-SNAP (\p www.itksnap.org) for
 #             visualization.
@@ -43,12 +43,12 @@ def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_conto
 
     parser = argparse.ArgumentParser(description="Read and visualize generated "
                                      "batches via ITK-SNAP."
-                                     "Executing 'python showCaseTrainingPipeline.py' "
+                                     "Executing 'python showcaseTrainingPipeline.py' "
                                      "visualizes the data provided in the "
                                      "test folder. Changing the respective "
                                      "variables allows the use of this "
                                      "script on any other data.",
-                                     prog="python showCaseTrainingPipeline.py",
+                                     prog="python showcaseTrainingPipeline.py",
                                      epilog="Author: Michael Ebner"
                                      "(michael.ebner.14@ucl.ac.uk)",
                                      )
