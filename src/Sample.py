@@ -167,11 +167,12 @@ class Sample(object):
             image_data = self._images[i].get_data()
             target_data = self._targets[i].get_data()
 
-            pylab.imshow(image_data, cmap="Greys_r")
             if mask:
-                pylab.imshow(target_data, cmap="bone", alpha=alpha)
-            pylab.title("slice %d" % (self._images[i].get_id()))
-            pylab.show(block=False)
+                utils.show_image(image_data, target_data=target_data,
+                                 title=self._images[i].get_id(), alpha=alpha)
+            else:
+                utils.show_image(image_data, title=self._images[i].get_id())
+
             utils.pause()
 
     def _get_pattern_group_matches_in_directory(self,

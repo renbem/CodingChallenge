@@ -1,6 +1,7 @@
 """
 \file Image.py
 \brief      Class to define an image for a training sample
+
 \author     Michael Ebner (michael.ebner.14@ucl.ac.uk)
 \date       June 2017
 """
