@@ -6,10 +6,10 @@ only limited information can be provided here.
 ## Installation
 
 This code requires the following Python packages 
-* `numpy
-* `pandas
-* `Pillow
-* `pydicom
+* `numpy`
+* `pandas`
+* `Pillow`
+* `pydicom`
 * `SimpleITK`
 
 The versions used for testing the code can be installed with `pip` by running
