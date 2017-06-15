@@ -162,3 +162,38 @@ class TestInput(unittest.TestCase):
 
         self.assertRaises(Exceptions.SampleNotValid,
             lambda: data_reader.read_data())
+
+    def test_sample_input_3(self):
+        """
+        Contours input must be a list
+        """
+        directory_contours = os.path.join(
+            dir_test_data, "flawed_data", "contourfiles", "SC-HF-I-1", "i-contours")
+        directory_dicoms = os.path.join(
+            dir_test_data, "flawed_data", "dicoms")
+        sample = Sample.Sample(directory_dicoms, directory_contours)
+
+        self.assertRaises(Exceptions.ObjectIsNotList, lambda: sample.create_sample())
+
+    def test_multiple_contours(self):
+        """
+        Verify that numbers of matching contours given i-contours and 
+        o-contours are correct
+        """
+        directory_contours = os.path.join(
+            dir_test_data, "flawed_data", "contourfiles")
+        directory_dicoms = os.path.join(
+            dir_test_data, "flawed_data", "dicoms")
+        csv_file = os.path.join(dir_test_data, "flawed_data", "link3.csv")
+        
+        data_reader = DataReader.DataReader(
+            directory_dicoms=directory_dicoms,
+            directory_contours=directory_contours,
+            csv_file=csv_file,
+            contours_type="i-contours o-contours")
+
+        data_reader.read_data()
+        samples = data_reader.get_samples()
+        images = samples[0].get_images()
+
+        self.assertEqual(len(images), 1)

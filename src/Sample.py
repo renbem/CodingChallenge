@@ -41,6 +41,7 @@ import os
 import re
 import pylab
 
+import src.TargetSingleClass as TargetSingleClass
 import src.Target as Target
 import src.Image as Image
 import src.Exceptions as Exceptions
@@ -55,16 +56,17 @@ class Sample(object):
 
     def __init__(self,
                  directory_dicoms,
-                 directory_contours,
+                 directory_contours_list,
                  regular_expression_dicoms='([0-9]+)[.]dcm',
                  regular_expression_contours='IM[-][0-9]+[-]([0-9]+)[-].*[.]txt'):
         """!
         Store paths and filenames required to create a sample
-
+        
         \param      directory_dicoms           path to DICOM images of
-                                               collection
-        \param      directory_contours         path to contour images of
-                                               collection
+                                               collection as string
+        \param      directory_contours_list    list of strings specifying the
+                                               paths to, possibly, multiple
+                                               contour directories
         \param      regular_expression_dicoms  define regular expression
                                                pattern for valid DICOM
                                                filenames
@@ -74,7 +76,7 @@ class Sample(object):
         """
 
         self._directory_dicoms = directory_dicoms
-        self._directory_contours = directory_contours
+        self._directory_contours_list = directory_contours_list
         self._regular_expression_dicoms = regular_expression_dicoms
         self._regular_expression_contours = regular_expression_contours
 
@@ -97,40 +99,49 @@ class Sample(object):
         dictionary_dicoms = self._get_pattern_group_matches_in_directory(
             self._directory_dicoms, self._regular_expression_dicoms)
 
-        # Create dictionary linking contour files associated to image with their
-        # filenames
-        dictionary_contours = self._get_pattern_group_matches_in_directory(
-            self._directory_contours, self._regular_expression_contours)
+        # Create list of dictionaries for all contour file inputs: Each
+        # item links contour files (slice_id) with their filenames
+        dictionary_contours_list = [self._get_pattern_group_matches_in_directory(
+            c, self._regular_expression_contours) for c in self._directory_contours_list]
 
-        # Create list of triples (slice id, filename_dicom_image,
-        # filename_contour_image) representing the list of images which come
-        # with a target (mask)
-        image_ids_and_dicom_contours_filenames = self._get_matching_files_and_image_ids(
-            dictionary_dicoms, dictionary_contours)
+        # Get image ids/slice ids which are common for all contours and the
+        # DICOM images
+        image_ids = self._get_image_ids_of_matching_dicom_and_contour_files(
+            dictionary_dicoms, dictionary_contours_list)
+        N_images = len(image_ids)
 
         # Ensure that at least one valid image with mask is provided
-        if len(image_ids_and_dicom_contours_filenames) == 0:
+        if N_images == 0:
             raise Exceptions.SampleNotValid()
 
         # Create a sample containing all image and target objects
-        N_images = len(image_ids_and_dicom_contours_filenames)
         self._images = [None] * N_images
         self._targets = [None] * N_images
 
-        for i in range(0, len(image_ids_and_dicom_contours_filenames)):
+        for i in range(0, N_images):
 
-            # Extract image id and absolute filenames for DICOM image and
-            # contour file, respectively.
-            image_id = image_ids_and_dicom_contours_filenames[i][0]
-            filename_dicom = os.path.abspath(os.path.join(
-                self._directory_dicoms, image_ids_and_dicom_contours_filenames[i][1]))
-            filename_contours = os.path.abspath(os.path.join(
-                self._directory_contours, image_ids_and_dicom_contours_filenames[i][2]))
+            image_id = image_ids[i]
 
-            # Add image and target objects
-            self._images[i] = Image.Image(image_id, filename_dicom)
-            self._targets[i] = Target.Target(
-                image_id, filename_contours, shape=self._images[i].get_data().shape)
+            # Create image using image id and absolute filename for DICOM
+            self._images[i] = Image.Image(
+                slice_id=image_id,
+                filename=os.path.abspath(os.path.join(
+                    self._directory_dicoms, dictionary_dicoms[image_id])))
+
+            # Create list of targets using image id and absolute filename for contours
+            targets_single_class_list = [
+                TargetSingleClass.TargetSingleClass(
+                    slice_id=image_id,
+                    filename=os.path.abspath(os.path.join(
+                        self._directory_contours_list[j],
+                        dictionary_contours_list[j][image_id])),
+                    shape=self._images[i].get_data().shape)
+                for j in range(0, len(self._directory_contours_list))
+            ]
+
+            # Create a target holding all specified contours.
+            self._targets[i] = Target.Target(targets_single_class_list)
+
 
     def get_images(self):
         """!
@@ -204,32 +215,20 @@ class Sample(object):
 
         return pattern_groups
 
-    def _get_matching_files_and_image_ids(self,
-                                          dictionary_dicoms,
-                                          dictionary_contours):
-        """!
-        Gets the image identifiers, ie slice number, and matching DICOM
-        image and contour filenames.
+    def _get_image_ids_of_matching_dicom_and_contour_files(self, dictionary_dicoms,
+                                                           dictionary_contours_list):
 
-        \param      dictionary_dicoms    dictionary linking image id with DICOM
-                                         image filename
-        \param      dictionary_contours  dictionary linking image id with
-                                         contour filename
+        # Get list of lists with all image ids for all dicom and contour files
+        image_ids_list = [dictionary_dicoms.keys()]
+        [ image_ids_list.append(dictionary_contours_list[i].keys()) for i in range(0, len(dictionary_contours_list)) ]
 
-        \return     List of triples of (image_id, dcm-filename,
-                    contour-filename).
-        """
+        # Get image ids which exist for all contours and DICOM files
+        image_ids = reduce(set.intersection, map(set, image_ids_list))
 
-        # Get triple of filenames describing all DICOM images which come with
-        # a mask.
-        image_ids_and_dicom_contours_filenames = [(k, dictionary_dicoms[k], dictionary_contours[k])
-                                                  for k, v in dictionary_contours.iteritems() if k in dictionary_dicoms.keys()]
+        # Return sorted list of indices
+        image_ids = sorted(image_ids)
 
-        # Sort list of triples according to image identifier/slice number
-        image_ids_and_dicom_contours_filenames = sorted(
-            image_ids_and_dicom_contours_filenames, key=lambda x: x[0])
-
-        return image_ids_and_dicom_contours_filenames
+        return image_ids
 
     def _check_input_files(self):
         """!
@@ -240,5 +239,9 @@ class Sample(object):
         if not utils.directory_exists(self._directory_dicoms):
             raise Exceptions.FolderNotExistent(self._directory_dicoms)
 
-        if not utils.directory_exists(self._directory_contours):
-            raise Exceptions.FolderNotExistent(self._directory_contours)
+        if type(self._directory_contours_list) is not list:
+            raise Exceptions.ObjectIsNotList(self._directory_contours_list)
+
+        for c in self._directory_contours_list:
+            if not utils.directory_exists(c):
+                raise Exceptions.FolderNotExistent(c)

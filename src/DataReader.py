@@ -68,10 +68,12 @@ class DataReader(object):
         \param      csv_file            path to CSV-filename
         \param      contours_type       string describing the subdirectory in
                                         the contours directory, i.e. either
-                                        "i-contours" or "o-contours"
+                                        "i-contours", "o-contours" or
+                                        "i-contours o-contours" in case both contours
+                                        shall be used.
         \param      header_dicoms       string of column header referring to
                                         the DICOM folders in CSV-file
-        \param      header_contours      string of column header referring to
+        \param      header_contours     string of column header referring to
                                         the contour folders in CSV-file
         """
 
@@ -118,20 +120,25 @@ class DataReader(object):
             raise Exceptions.CsvFileFlawed(
                 "Different length of input columns.")
 
+        # Get list of given input contours
+        contours_type_list = self._get_contours_type_list()
+        
         # Create samples containing an image and target
         self._samples = []
         for i in range(0, len(dicom_ids)):
 
-            # Get directory for samples
-            directory_dicoms_images = os.path.join(
+            # Get directory for DICOM images
+            directory_dicoms = os.path.join(
                 self._directory_dicoms, dicom_ids[i])
-            directory_countourfile_images = os.path.join(
-                self._directory_contours,
-                contourfile_ids[i], self._contours_type)
+
+            # Create list of directories for contour file images
+            directory_contourfile_list = [os.path.join(
+                self._directory_contours, contourfile_ids[i], c)
+                for c in contours_type_list]
 
             # Create sample based on valid image slices
             sample = Sample.Sample(
-                directory_dicoms_images, directory_countourfile_images)
+                directory_dicoms, directory_contourfile_list)
             sample.create_sample()
 
             self._samples.append(sample)
@@ -147,6 +154,14 @@ class DataReader(object):
             raise Exceptions.ObjectNotCreated("read_data")
         return self._samples
 
+    def _get_contours_type_list(self):
+        """!
+        Convert space separated contours into a list
+
+        \return list of contours
+        """
+        return self._contours_type.split(" ")
+
     def _check_input_files(self):
         """!
         Check whether given paths and filenames exist and raise an error
@@ -155,6 +170,9 @@ class DataReader(object):
 
         if not utils.directory_exists(self._directory_dicoms):
             raise Exceptions.FolderNotExistent(self._directory_dicoms)
+
+        # Get list of given input contours
+        contours_type_list = self._get_contours_type_list()
 
         if not utils.directory_exists(self._directory_contours):
             raise Exceptions.FolderNotExistent(self._directory_contours)

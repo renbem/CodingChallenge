@@ -66,7 +66,7 @@ def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_conto
                             subdirectory_contours),
                         default=subdirectory_contours)
     parser.add_argument('--contours-type', required=False, type=str,
-                        help="Chosen type of contour files [default: %s]" % (
+                        help="Chosen type of contour files. Several contours can be read by using white spaces for separation. Thus, valid inputs are, e.g., 'i-contours', 'o-contours', 'i-contours o-contours' etc. [default: %s]" % (
                             contours_type),
                         default=contours_type)
     parser.add_argument('--verbose', type=bool, required=False,

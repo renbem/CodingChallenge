@@ -38,6 +38,7 @@ class DataBase(object):
         image_data = self._samples[0].get_images()[0].get_data()
         self._shape = image_data.shape
         self._image_data_type = image_data.dtype
+        self._target_data_type = self._samples[0].get_images()[1].get_data().dtype
 
         # Set seed for reproducible random results
         np.random.seed(seed)
@@ -138,7 +139,7 @@ class DataBase(object):
         images_array = np.zeros(
             (self._shape[0], self._shape[1], N_indices), dtype=self._image_data_type)
         targets_array = np.zeros(
-            (self._shape[0], self._shape[1], N_indices), dtype=bool)
+            (self._shape[0], self._shape[1], N_indices), dtype=self._target_data_type)
 
         # Fill numpy arrays
         for i in range(0, N_indices):

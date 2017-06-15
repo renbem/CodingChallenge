@@ -1,16 +1,14 @@
 #!/usr/bin/python
 
 ##
-# \file showcaseTrainingPipeline.py
-# \brief      Showcase how to use training pipeline.
+# \file showIOContours.py
+# \brief      Showcase how to read and visualize data.
 #
-# \details    By executing 'python examples/showcaseTrainingPipeline.py'
-#             provided test data is read and visualized sequentially. This code
-#             can be run by specifying the respective arguments. More
-#             information via 'python examples/showcaseTrainingPipeline.py -h'.
+# \details    By executing 'python examples/showSamples.py' provided test data
+#             is read and visualized sequentially. This code can be run by
+#             specifying the respective arguments. More information via 'python
+#             examples/showSamples.py -h'.
 #
-# \pre        Requires the installation of ITK-SNAP (\p www.itksnap.org) for
-#             visualization.
 # \author     Michael Ebner (michael.ebner.14@ucl.ac.uk)
 # \date       June 2017
 #
@@ -23,13 +21,12 @@ import argparse
 from definitions import dir_test_data_final_data
 
 import src.DataReader as DataReader
-import src.DataBase as DataBase
 import src.utilities as utils
 
 
 def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_contours,
                           subdirectory_dicoms, contours_type):
-    """!
+    """
     Gets the parsed input line.
 
     \param      verbose                boolean for verbose output
@@ -41,14 +38,13 @@ def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_conto
     \return     The parsed input line.
     """
 
-    parser = argparse.ArgumentParser(description="Read and visualize generated "
-                                     "batches via ITK-SNAP."
-                                     "Executing 'python showcaseTrainingPipeline.py' "
+    parser = argparse.ArgumentParser(description="Read and visualize data. "
+                                     "Executing 'python showSamples.py' "
                                      "visualizes the data provided in the "
                                      "test folder. Changing the respective "
                                      "variables allows the use of this "
                                      "script on any other data.",
-                                     prog="python showcaseTrainingPipeline.py",
+                                     prog="python showSamples.py",
                                      epilog="Author: Michael Ebner"
                                      "(michael.ebner.14@ucl.ac.uk)",
                                      )
@@ -96,7 +92,7 @@ if __name__ == '__main__':
         csv_file=os.path.join(dir_test_data_final_data, "link.csv"),
         subdirectory_contours="contourfiles",
         subdirectory_dicoms="dicoms",
-        contours_type="i-contours",
+        contours_type="i-contours o-contours",
     )
 
     # Read data
@@ -109,28 +105,9 @@ if __name__ == '__main__':
         directory_dicoms=directory_dicoms, directory_contours=directory_contourfiles, csv_file=args.csv_file, contours_type=args.contours_type)
     data_reader.read_data()
 
-    # Create data base to manage training samples
-    database = DataBase.DataBase(data_reader.get_samples(), batch_size=8, seed=None)
-    database.build_training_database()
-    
     # Show images with associated mask of each sample sequentially
-    count = 1
-    while (count < 5):        
-        
-        # Variant A: Get next batch of length batch_size
-        images_array, targets_array = database.get_next_batch()
-        
-        # Variant B: Get random batch of length batch_size
-        # images_array, targets_array = database.get_random_batch()
-        
-        if images_array is None:
-            break
-        
-        utils.print_title("Batch %d" %(count))
+    samples = data_reader.get_samples()
 
-        ## Show 3D images and targets as masks via ITK-SNAP
-        utils.show_image_data(images_array, targets_array)
-        
-        utils.pause()
-        count += 1
-
+    for i in range(0, len(samples)):
+        utils.print_title("Sample %d/%d" %(i+1,len(samples)))
+        samples[i].show(mask=True)

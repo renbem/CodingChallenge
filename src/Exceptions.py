@@ -88,3 +88,11 @@ class SampleNotValid(Exception):
     def __str__(self):
         error = "Sample cannot be created since no pair of image and target could be established"
         return error
+
+class ObjectIsNotList(Exception):
+    """!
+    Error handling in case object is not a list
+    """
+    
+    def __str__(self):
+        return "Object must be a list."
