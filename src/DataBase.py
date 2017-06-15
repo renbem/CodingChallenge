@@ -38,7 +38,8 @@ class DataBase(object):
         image_data = self._samples[0].get_images()[0].get_data()
         self._shape = image_data.shape
         self._image_data_type = image_data.dtype
-        self._target_data_type = self._samples[0].get_images()[1].get_data().dtype
+        self._target_data_type = self._samples[
+            0].get_images()[1].get_data().dtype
 
         # Set seed for reproducible random results
         np.random.seed(seed)
@@ -75,18 +76,18 @@ class DataBase(object):
         return self._training_samples
 
     def get_next_batch(self):
-        """
-        ! Gets the next batch of size batch_size.
-        
+        """!
+        Gets the next batch of size batch_size.
+
         \details    returns one 3D numpy array for images and one 3D numpy
                     array for targets of a the next single batch, i.e. stacking
                     of respective arrays together. For each numpy array holds
                     array.shape[2] = batch_size (or smaller if end of data is
                     about to be reached). In case all data has been 
                     None, None is returned.
-        
+
         \post       cursor is increased by batch size
-        
+
         \return     Pair images_numpy_array, targets_numpy_array of next batch
                     with.
         """
@@ -97,6 +98,14 @@ class DataBase(object):
 
         return self._get_numpy_arrays_of_batch(np.arange(i_0, i_max))
 
+    def get_batch_for_all_samples(self):
+        """!
+        Gets the batch which includes all available samples
+
+        \return     Pair images_numpy_array, targets_numpy_array of batch
+                    including all samples.
+        """
+        return self._get_numpy_arrays_of_batch(np.arange(0, self._N_samples))
 
     def restart_cursor(self):
         """!
