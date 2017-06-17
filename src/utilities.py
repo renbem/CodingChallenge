@@ -129,7 +129,7 @@ def get_image_and_target_data_array_from_sample(sample):
     return images_data_array, targets_data_array
 
 
-def show_plot_dice_scores(x, y, x_label="", y_label="", fig_number=None, save_to_filename=None):
+def show_plot_dice_scores_over_thresholds(x, y, x_label="", y_label="", fig_number=None, save_to_filename=None):
     """!
     Plot curves
     """
@@ -144,14 +144,38 @@ def show_plot_dice_scores(x, y, x_label="", y_label="", fig_number=None, save_to
     plt.plot(np.ones(2)*x[dice_max_index], [0, 1], linestyle="--")
     plt.xlabel(x_label)
     plt.ylabel(y_label)
-    ax.set_xlim([0,np.max(x)])
-    ax.set_ylim([0,1])
-    plt.title("Maximum Dice Score = %.3f @ Intensity Threshold = %d" %(y[dice_max_index], x[dice_max_index]))
+    ax.set_xlim([0, np.max(x)])
+    ax.set_ylim([0, 1])
+    plt.title("Maximum Mean Dice Score = %.3f @ Intensity Threshold = %d" %
+              (y[dice_max_index], x[dice_max_index]))
     plt.show(block=False)
 
     if save_to_filename is not None:
         fig.savefig(save_to_filename)
         print_info("Figure is saved to %s" % (save_to_filename))
+
+
+def show_plot_dice_scores_over_samples(y, threshold, y_label="", fig_number=None, save_to_filename=None):
+
+    mean_value = np.mean(y)
+
+    fig = plt.figure(fig_number)
+    fig.clf()
+    ax = fig.add_subplot(111)
+    plt.plot(sorted(y), marker="o")
+    x_limits = ax.get_xlim()
+    plt.plot(x_limits, [mean_value, mean_value], linestyle="--")
+    plt.xlabel("Image (sorted according to Dice score)")
+    plt.ylabel(y_label)
+    plt.title("Image Dice Scores for Intensity Threshold = %d" %(threshold))
+    ax.set_xlim(x_limits)
+    ax.set_ylim([0, 1])
+    plt.show(block=False)
+
+    if save_to_filename is not None:
+        fig.savefig(save_to_filename)
+        print_info("Figure is saved to %s" % (save_to_filename))
+
 
 def show_box_plot(data, x_labels=None, y_label=None, fig_number=None, save_to_filename=None):
     """!
@@ -164,7 +188,7 @@ def show_box_plot(data, x_labels=None, y_label=None, fig_number=None, save_to_fi
     plt.boxplot(data)
     plt.setp(ax, xticklabels=x_labels)
     plt.ylabel(y_label)
-    
+
     plt.show(block=False)
 
     if save_to_filename is not None:
@@ -175,10 +199,10 @@ def show_box_plot(data, x_labels=None, y_label=None, fig_number=None, save_to_fi
 def dice_score(image_0, image_1):
     """!
     Compute Dice score given two image data arrays
-    
+
     \param      image_0  Image as numpy data array
     \param      image_1  Image as numpy data array
-    
+
     \return     Dice score
     """
     if image_0.shape != image_1.shape:

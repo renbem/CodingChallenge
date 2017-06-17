@@ -113,7 +113,7 @@ if __name__ == '__main__':
     [images_array, targets_array] = database.get_batch_for_all_samples()
 
     # Show 3D images and targets as masks via ITK-SNAP
-    utils.show_image_data(images_array, targets_array)
+    utils.show_image_data(images_array, targets_array, title="ground-truth")
 
     utils.print_title("Statistics: Blood Pool vs Heart Muscle [mean (std)]")
 
@@ -124,6 +124,7 @@ if __name__ == '__main__':
     data_heart_muscle = images_array[np.where(targets_array == 1)]
     pval = stats.ttest_ind(data_blood_pool, data_heart_muscle)
     alpha = 0.05
+    utils.print_info("Sample size: %d 2D images" % (images_array.shape[2]))
     print("Blood Pool: %.3f (%.3f)" %
           (data_blood_pool.mean(), data_blood_pool.std()))
     print("Heart Muscle: %.3f (%.3f)" %
@@ -141,20 +142,49 @@ if __name__ == '__main__':
         # save_to_filename=os.path.join(dir_figures, "BoxPlot.pdf")
     )
 
+    utils.print_title("Estimate optimal threshold for entire sample")
     # Create masking scheme used for predicting blood pool masks
-    thresholds_list = range(0, 500, 1)
+    thresholds_list = range(0, 500)
     threshold_masking_scheme = ThresholdMaskingScheme.ThresholdMaskingScheme(
         images_array=images_array,
         targets_array=targets_array,
         thresholds_list=thresholds_list)
 
-    dice_scores_mean = threshold_masking_scheme.evaluate_masking_scheme_by_threshold_sweeping()
-
-    utils.show_plot_dice_scores(
+    dice_scores_means = threshold_masking_scheme.evaluate_masking_scheme_by_threshold_sweeping()
+    utils.show_plot_dice_scores_over_thresholds(
         x=thresholds_list,
-        y=dice_scores_mean,
+        y=dice_scores_means,
         x_label="Intensity Threshold",
         y_label="Dice Score",
         fig_number=2,
         # save_to_filename=os.path.join(dir_figures, "DiceScores.pdf")
     )
+
+    # Generate segmentation for "optimal" (based on Dice) threshold
+    optimal_threshold = thresholds_list[np.argmax(dice_scores_means)]
+    target_array_estimate = threshold_masking_scheme.get_target_array_estimate(
+        optimal_threshold)
+
+    # Visualize i-contours for both "ground-truth" and estimate
+    targets_array[np.where(targets_array == 1)] = 0
+    utils.show_image_data(images_array, targets_array, title="i-contours")
+
+    utils.show_image_data(
+        images_array, target_array_estimate*2, title="i-contours-estimate")
+
+    dice_scores_per_slice = [utils.dice_score(targets_array[:, :, i].astype(
+        bool), target_array_estimate[:, :, i].astype(bool)) for i in range(0, targets_array.shape[2])]
+
+    utils.show_plot_dice_scores_over_samples(
+        y=dice_scores_per_slice,
+        threshold=optimal_threshold,
+        y_label="Dice Score",
+        fig_number=3,
+        # save_to_filename=os.path.join(dir_figures, "DiceScoresOverSample.pdf")
+    )
+
+    utils.print_info("Dice scores for 'optimal' threshold choice: %.3f (%.3f)" %(np.mean(dice_scores_per_slice), np.std(dice_scores_per_slice)))
+    i_slice = 20
+    utils.show_image(images_array[:, :, i_slice], 
+        target_data=target_array_estimate[:, :, i_slice], 
+        title="Dice = %.3f" % (dice_scores_per_slice[i_slice]))

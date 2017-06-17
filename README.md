@@ -24,14 +24,14 @@ A documentation for the Python source-files can be generated in case [Doxygen](h
 * `open html/index.html`
 
 ## Example usage
-Several example scripts are provided in the folder `examples` which shall illustrate the use of the code.  These include
+Several example scripts are provided in the folder `examples` to illustrate the use of the code.
 * `python examples/showIContours.py`: Show image and overlaid i-contours slice by slice for each sample
 * `python examples/showcaseTrainingPipeline.py`: Showcase how to use training pipeline and visualize the obtained training data in 3D
 * `python examples/showIOContours.py`: Show image and overlaid i- and o-contours slice by slice for each sample
 * `python examples/showcaseTrainingTesting.py`: Showcase how to use coding framework for training and testing a simple masking scheme based on thresholding.
 * `python examples/analyseImages.py`: Script to analyse the image regions masked by i- and o-contours
 
-within the root directory. To check the provided unit tests, execute
+To check the provided unit tests, execute
 * `python test/runTests.py`
 
 

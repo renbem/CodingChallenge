@@ -113,10 +113,9 @@ if __name__ == '__main__':
     data_reader = DataReader.DataReader(
         directory_dicoms=directory_dicoms, directory_contours=directory_contourfiles, csv_file=args.csv_file, contours_type=args.contours_type)
     data_reader.read_data()
-    samples = data_reader.get_samples()
 
     # Create data base to manage training samples
-    database = DataBase.DataBase(samples, seed=1)
+    database = DataBase.DataBase(data_reader.get_samples(), seed=1)
     database.build_training_database()
 
     # Create masking scheme used for predicting blood pool masks
@@ -154,5 +153,6 @@ if __name__ == '__main__':
         results[i, 2] = dice_scores_mean_testing
 
     utils.print_title("Summary:")
-    utils.print_info("Mean training Dice score: %.3f" %(results[:,1].mean()))
-    utils.print_info("Mean test Dice score: %.3f" %(results[:,2].mean()))
+    utils.print_info("Optimal Threshold: %.3f (%.3f)" %(results[:,0].mean(), results[:,0].std()))
+    utils.print_info("Training Dice score: %.3f (%.3f)" %(results[:,1].mean(), results[:,1].std()))
+    utils.print_info("Testing Dice score: %.3f (%.3f)" %(results[:,2].mean(), results[:,2].std()))
