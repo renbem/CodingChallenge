@@ -44,6 +44,14 @@ class DataBase(object):
         # Set seed for reproducible random results
         np.random.seed(seed)
 
+    def set_batch_size(self, batch_size):
+        """!
+        Set the batch size
+        
+        \param      batch_size  integer value to define batch size
+        """
+        self._batch_size = batch_size
+
     def build_training_database(self):
         """!
         Builds a training database from the given samples.
@@ -120,11 +128,45 @@ class DataBase(object):
         \return     Pair images_numpy_array, targets_numpy_array of random
                     batch
         """
-        indices_all = np.arange(0, self._N_samples)
 
-        indices = np.random.choice(indices_all, self._batch_size)
+        indices = self._get_random_indices_for_sample_selection()        
 
         return self._get_numpy_arrays_of_batch(indices)
+
+    def get_random_batch_and_batch_complement(self):
+        """!
+        Gets random batch of size batch_size and the complement of this
+        batch.
+
+        \details    Return random batch s_1 and complement s_2 of all samples,
+                    i.e. s_1 \cap s_2 = \emptyset and s_1 \cup s_2 =
+                    all_training_samples. The idea is to define the batch size
+                    according to the number of samples used for training
+                    and get also its complement for testing.
+
+        \remark     A better way would be to return both training and testing
+                    batches in smaller amounts.
+
+        \return     The random batch and complement as pairs of numpy arrays
+        """
+
+        indices = self._get_random_indices_for_sample_selection()   
+
+        indices_complement = list(set(np.arange(0, self._N_samples)) - set(indices))
+
+        return self._get_numpy_arrays_of_batch(indices), self._get_numpy_arrays_of_batch(indices_complement)
+
+    def _get_random_indices_for_sample_selection(self):
+        """!
+        Get random indices for sample selection without replacement
+        
+        \return     Array of random indices from sample of size batch_size.
+        """
+
+        indices_all = np.arange(0, self._N_samples)
+        indices = np.random.choice(indices_all, self._batch_size, replace=False)
+        
+        return indices
 
     def _get_numpy_arrays_of_batch(self, indices):
         """!

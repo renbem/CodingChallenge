@@ -2,7 +2,8 @@
 
 ##
 # \file analyseImages.py
-# \brief      Script to perform image analysis.
+# \brief      Script to analyse the given image regions masked by i- and
+#             o-contours.
 #
 # \author     Michael Ebner (michael.ebner.14@ucl.ac.uk)
 # \date       June 2017
@@ -12,12 +13,17 @@
 import os
 import sys
 import argparse
+import numpy as np
+from scipy import stats
 
 from definitions import dir_test_data_final_data
+from definitions import dir_figures
 
 import src.DataReader as DataReader
 import src.DataBase as DataBase
 import src.utilities as utils
+import src.ThresholdMaskingScheme as ThresholdMaskingScheme
+import src.TrainingTesting as TrainingTesting
 
 
 def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_contours,
@@ -34,12 +40,8 @@ def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_conto
     \return     The parsed input line.
     """
 
-    parser = argparse.ArgumentParser(description="Read and visualize data. "
-                                     "Executing 'python showSamples.py' "
-                                     "visualizes the data provided in the "
-                                     "test folder. Changing the respective "
-                                     "variables allows the use of this "
-                                     "script on any other data.",
+    parser = argparse.ArgumentParser(description="Analyse given image regions "
+                                     "masked by i - and o-contours",
                                      prog="python showSamples.py",
                                      epilog="Author: Michael Ebner"
                                      "(michael.ebner.14@ucl.ac.uk)",
@@ -75,7 +77,7 @@ def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_conto
     if args.verbose:
         print("Given Input")
         for arg in sorted(vars(args)):
-            utils.print_debug_info("%s: " %(arg), newline=False)
+            utils.print_info("%s: " % (arg), newline=False)
             print(getattr(args, arg))
 
     return args
@@ -85,12 +87,11 @@ if __name__ == '__main__':
     args = get_parsed_input_line(
         verbose=True,
         directory_input=dir_test_data_final_data,
-        csv_file=os.path.join(dir_test_data_final_data, "link.csv"),
+        # csv_file=os.path.join(dir_test_data_final_data, "link.csv"),
+        csv_file=os.path.join(dir_test_data_final_data, "link_reduced.csv"),
         subdirectory_contours="contourfiles",
         subdirectory_dicoms="dicoms",
         contours_type="i-contours o-contours",
-        # contours_type="o-contours",
-        # contours_type="i-contours",
     )
 
     # Read data
@@ -102,18 +103,58 @@ if __name__ == '__main__':
     data_reader = DataReader.DataReader(
         directory_dicoms=directory_dicoms, directory_contours=directory_contourfiles, csv_file=args.csv_file, contours_type=args.contours_type)
     data_reader.read_data()
+    samples = data_reader.get_samples()
 
     # Create data base to manage training samples
-    database = DataBase.DataBase(data_reader.get_samples())
+    database = DataBase.DataBase(samples)
     database.build_training_database()
-    samples = database.get_all_training_samples()
 
-    # for i in range(0, len(samples)):
-    #     utils.print_title("Sample %d/%d" %(i+1,len(samples)))
-    #     samples[i].show(mask=True)
-    #     utils.pause()
+    # [images_array, targets_array] = database.get_random_batch()
+    [images_array, targets_array] = database.get_batch_for_all_samples()
 
-    images_array, targets_array = database.get_batch_for_all_samples()
-
-    ## Show 3D images and targets as masks via ITK-SNAP
+    # Show 3D images and targets as masks via ITK-SNAP
     utils.show_image_data(images_array, targets_array)
+
+    utils.print_title("Statistics: Blood Pool vs Heart Muscle [mean (std)]")
+
+    # "Ground-Truth" labelling of blood pool (given by i-contours)
+    data_blood_pool = images_array[np.where(targets_array == 2)]
+
+    # "Ground-Truth" labelling of heart muscle (between o- and i-contours)
+    data_heart_muscle = images_array[np.where(targets_array == 1)]
+    pval = stats.ttest_ind(data_blood_pool, data_heart_muscle)
+    alpha = 0.05
+    print("Blood Pool: %.3f (%.3f)" %
+          (data_blood_pool.mean(), data_blood_pool.std()))
+    print("Heart Muscle: %.3f (%.3f)" %
+          (data_heart_muscle.mean(), data_heart_muscle.std()))
+    if pval[1] < alpha:
+        print("Blood pool and heart muscle mean intensities are statistically significant (p < %g)" % (alpha))
+    else:
+        print("Mean of blood pool and hear muscle intensities are NOT statistically different (p > %g)" % (alpha))
+
+    utils.show_box_plot(
+        data=[data_blood_pool, data_heart_muscle],
+        x_labels=["Blood Pool", "Heart Muscle"],
+        y_label="Image Intensity",
+        fig_number=1,
+        # save_to_filename=os.path.join(dir_figures, "BoxPlot.pdf")
+    )
+
+    # Create masking scheme used for predicting blood pool masks
+    thresholds_list = range(0, 500, 1)
+    threshold_masking_scheme = ThresholdMaskingScheme.ThresholdMaskingScheme(
+        images_array=images_array,
+        targets_array=targets_array,
+        thresholds_list=thresholds_list)
+
+    dice_scores_mean = threshold_masking_scheme.evaluate_masking_scheme_by_threshold_sweeping()
+
+    utils.show_plot_dice_scores(
+        x=thresholds_list,
+        y=dice_scores_mean,
+        x_label="Intensity Threshold",
+        y_label="Dice Score",
+        fig_number=2,
+        # save_to_filename=os.path.join(dir_figures, "DiceScores.pdf")
+    )

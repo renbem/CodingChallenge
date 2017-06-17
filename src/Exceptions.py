@@ -95,4 +95,12 @@ class ObjectIsNotList(Exception):
     """
     
     def __str__(self):
-        return "Object must be a list."
+        return "Object must be a list"
+
+class ShapeMismatch(Exception):
+    """
+    Shapes of two objects do not match
+    """
+
+    def __str__(self):
+        return "Shape mismatch of provided objects"

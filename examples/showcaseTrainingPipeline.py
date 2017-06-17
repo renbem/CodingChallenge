@@ -83,7 +83,7 @@ def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_conto
     if args.verbose:
         print("Given Input")
         for arg in sorted(vars(args)):
-            utils.print_debug_info("%s: " %(arg), newline=False)
+            utils.print_info("%s: " %(arg), newline=False)
             print(getattr(args, arg))
 
     return args

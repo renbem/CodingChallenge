@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
 ##
-# \file showIOContours.py
-# \brief      Show how to read and visualize i- and o-contours.
+# \file showIContours.py
+# \brief      Showcase how to read and visualize data.
 #
-# \details    By executing 'python examples/showSamples.py' provided test data
+# \details    By executing 'python examples/showIContours.py' provided test data
 #             is read and visualized sequentially. This code can be run by
 #             specifying the respective arguments. More information via 'python
-#             examples/showSamples.py -h'.
+#             examples/showIContours.py -h'.
 #
 # \author     Michael Ebner (michael.ebner.14@ucl.ac.uk)
 # \date       June 2017
@@ -38,9 +38,13 @@ def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_conto
     \return     The parsed input line.
     """
 
-    parser = argparse.ArgumentParser(description="Show how to read and "
-                                     "visualize i- and o-contours.",
-                                     prog="python showIOContours.py",
+    parser = argparse.ArgumentParser(description="Read and visualize data. "
+                                     "Executing 'python showIContours.py' "
+                                     "visualizes the data provided in the "
+                                     "test folder. Changing the respective "
+                                     "variables allows the use of this "
+                                     "script on any other data.",
+                                     prog="python showIContours.py",
                                      epilog="Author: Michael Ebner"
                                      "(michael.ebner.14@ucl.ac.uk)",
                                      )
@@ -75,7 +79,7 @@ def get_parsed_input_line(verbose, directory_input, csv_file, subdirectory_conto
     if args.verbose:
         print("Given Input")
         for arg in sorted(vars(args)):
-            utils.print_info("%s: " % (arg), newline=False)
+            utils.print_info("%s: " %(arg), newline=False)
             print(getattr(args, arg))
 
     return args
@@ -88,7 +92,7 @@ if __name__ == '__main__':
         csv_file=os.path.join(dir_test_data_final_data, "link.csv"),
         subdirectory_contours="contourfiles",
         subdirectory_dicoms="dicoms",
-        contours_type="i-contours o-contours",
+        contours_type="i-contours",
     )
 
     # Read data
@@ -103,7 +107,6 @@ if __name__ == '__main__':
 
     # Show images with associated mask of each sample sequentially
     samples = data_reader.get_samples()
-
     for i in range(0, len(samples)):
-        utils.print_title("Sample %d/%d" % (i+1, len(samples)))
+        utils.print_title("Sample %d/%d" %(i+1,len(samples)))
         samples[i].show(mask=True)
